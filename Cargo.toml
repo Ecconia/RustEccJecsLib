@@ -1,0 +1,7 @@
+[package]
+name = "ecc_jecs_lib"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+ecc_ansi_lib = { git = "https://github.com/Ecconia/RustEccAnsi.git", tag = "v1.0.0" }

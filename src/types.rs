@@ -106,7 +106,7 @@ impl JecsType {
 	
 	pub fn expect_bool(&self) -> Result<bool, Box<dyn JecsTreeError>> {
 		let value = self.expect_string().map_err(|mut e| { e.expected_type = "bool".to_string(); e })?;
-		Ok(match value {
+		Ok(match &value.to_lowercase()[..] {
 			"true" | "on" | "yes" | "y" => true,
 			"false" | "off" | "no" | "n" => false,
 			_ => {

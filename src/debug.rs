@@ -1,4 +1,5 @@
 use ecc_ansi_lib::ansi;
+
 use crate::types::JecsType;
 
 pub fn debug_print(entry: &JecsType) {

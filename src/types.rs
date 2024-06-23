@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-use crate::errors::{JecsIncompatibleOrMalformedError, JecsTreeError, JecsWrongEntryTypeError};
+use std::error::Error;
+
+use crate::errors::{JecsIncompatibleOrMalformedError, JecsWrongEntryTypeError};
 
 #[derive(Eq, PartialEq)]
 #[derive(Debug)]
@@ -104,7 +106,7 @@ impl JecsType {
 		Ok(self.get_value().unwrap())
 	}
 	
-	pub fn expect_bool(&self) -> Result<bool, Box<dyn JecsTreeError>> {
+	pub fn expect_bool(&self) -> Result<bool, Box<dyn Error>> {
 		let value = self.expect_string().map_err(|mut e| { e.expected_type = "bool".to_string(); e })?;
 		Ok(match &value.to_lowercase()[..] {
 			"true" | "on" | "yes" | "y" => true,
@@ -118,7 +120,7 @@ impl JecsType {
 		})
 	}
 	
-	pub fn expect_double(&self) -> Result<f64, Box<dyn JecsTreeError>> {
+	pub fn expect_double(&self) -> Result<f64, Box<dyn Error>> {
 		let value = self.expect_string().map_err(|mut e| { e.expected_type = "double".to_string(); e })?;
 		Ok(value.parse::<f64>().map_err(|_| JecsIncompatibleOrMalformedError {
 			data_type: "double".to_string(),
@@ -126,7 +128,7 @@ impl JecsType {
 		})?)
 	}
 	
-	pub fn expect_color(&self) -> Result<(u8, u8, u8), Box<dyn JecsTreeError>> {
+	pub fn expect_color(&self) -> Result<(u8, u8, u8), Box<dyn Error>> {
 		let value = self.expect_string().map_err(|mut e| { e.expected_type = "color".to_string(); e })?;
 		if value.len() != 6 {
 			//Not 6 characters long...
@@ -152,7 +154,7 @@ impl JecsType {
 		))
 	}
 	
-	pub fn expect_unsigned(&self) -> Result<u32, Box<dyn JecsTreeError>> {
+	pub fn expect_unsigned(&self) -> Result<u32, Box<dyn Error>> {
 		let value = self.expect_string().map_err(|mut e| { e.expected_type = "unsigned".to_string(); e })?;
 		Ok(value.parse::<u32>().map_err(|_e| JecsIncompatibleOrMalformedError {
 			data_type: "unsigned".to_string(),
@@ -160,7 +162,7 @@ impl JecsType {
 		})?)
 	}
 	
-	pub fn expect_component_address(&self) -> Result<u32, Box<dyn JecsTreeError>> {
+	pub fn expect_component_address(&self) -> Result<u32, Box<dyn Error>> {
 		let mut value = self.expect_string().map_err(|mut e| { e.expected_type = "component address".to_string(); e })?;
 		if !value.starts_with("C-") {
 			//Must start with 'C-'

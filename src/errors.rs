@@ -3,21 +3,6 @@ use std::fmt::{Debug, Display, Formatter};
 
 // ###### Tree Errors ######
 
-pub enum JecsTreeErrorType {
-	WrongEntryType,
-	IncompatibleOrMalformedData,
-}
-
-pub trait JecsTreeError : Error {
-	fn error_type(&self) -> JecsTreeErrorType;
-}
-
-impl<T: JecsTreeError + 'static> From<T> for Box<dyn JecsTreeError> {
-	fn from(value: T) -> Self {
-		Box::new(value)
-	}
-}
-
 // ### Wrong Entry Type ###
 
 #[derive(Debug)]
@@ -35,12 +20,6 @@ impl Display for JecsWrongEntryTypeError {
 	}
 }
 
-impl JecsTreeError for JecsWrongEntryTypeError {
-	fn error_type(&self) -> JecsTreeErrorType {
-		JecsTreeErrorType::WrongEntryType
-	}
-}
-
 // ### Incompatible Or Malformed Data ###
 
 #[derive(Debug)]
@@ -55,12 +34,6 @@ impl Display for JecsIncompatibleOrMalformedError {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
 		writeln!(f, "Failed to parse {} data with value '{}'", self.data_type, self.value)?;
 		Ok(())
-	}
-}
-
-impl JecsTreeError for JecsIncompatibleOrMalformedError {
-	fn error_type(&self) -> JecsTreeErrorType {
-		JecsTreeErrorType::IncompatibleOrMalformedData
 	}
 }
 

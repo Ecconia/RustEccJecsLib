@@ -4,6 +4,7 @@ use std::str::Utf8Error;
 
 use ecc_jecs_lib::{debug, parser};
 use ecc_jecs_lib::errors::JecsCorruptedDataError;
+use ecc_jecs_lib::types::JecsType;
 
 fn main() {
 	//This file serves as a test for myself to check if my parser does not break on all files of my installation.
@@ -33,7 +34,7 @@ fn main() {
 				}
 			}
 		};
-		debug::debug_print(&tree);
+		debug::debug_print(&JecsType::Map(tree));
 	}
 }
 

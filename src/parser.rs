@@ -8,19 +8,19 @@ use std::str::Chars;
 use crate::errors::JecsCorruptedDataError;
 use crate::types::JecsType;
 
-pub fn parse_jecs_file(path: &Path) -> Result<JecsType, Box<dyn Error>> {
+pub fn parse_jecs_file(path: &Path) -> Result<HashMap<String, JecsType>, Box<dyn Error>> {
 	let bytes = fs::read(&path)?; //std::io::Error
 	parse_jecs_bytes(&bytes)
 }
 
-pub fn parse_jecs_bytes(bytes: &[u8]) -> Result<JecsType, Box<dyn Error>> {
+pub fn parse_jecs_bytes(bytes: &[u8]) -> Result<HashMap<String, JecsType>, Box<dyn Error>> {
 	let text = from_utf8(bytes)?; //Utf8Error
 	//Remove BOM on encounter:
 	let text = if text.starts_with("\u{feff}") { &text[3..] } else { &text };
 	Ok(parse_jecs_string(text)?)
 }
 
-pub fn parse_jecs_string(text: &str) -> Result<JecsType, JecsCorruptedDataError> {
+pub fn parse_jecs_string(text: &str) -> Result<HashMap<String, JecsType>, JecsCorruptedDataError> {
 	let mut tree_parser = TreeParser::default();
 	
 	let mut line_iterator = text.lines()
@@ -411,7 +411,7 @@ impl TreeParser {
 		}
 	}
 	
-	fn finalize_to_map(self) -> Result<JecsType, JecsCorruptedDataError> {
+	fn finalize_to_map(self) -> Result<HashMap<String, JecsType>, JecsCorruptedDataError> {
 		struct ConvertedMeta {
 			name: Option<String>,
 			converted: JecsType,
@@ -489,10 +489,10 @@ impl TreeParser {
 		}
 		
 		let root = converted_stack.pop().unwrap().converted;
-		if let JecsType::Map(_) = root {
-			Ok(root)
+		if let JecsType::Map(map) = root {
+			Ok(map)
 		} else {
-			panic!("Impossible to reach code: Something is wrong with the LineContext to JecsType converting code. Did get wrong root type.");
+			unreachable!("Impossible to reach code: Something is wrong with the LineContext to JecsType converting code. Did get wrong root type.");
 		}
 	}
 }

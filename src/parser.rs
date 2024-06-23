@@ -15,6 +15,8 @@ pub fn parse_jecs_file(path: &Path) -> Result<JecsType, Box<dyn Error>> {
 
 pub fn parse_jecs_bytes(bytes: &[u8]) -> Result<JecsType, Box<dyn Error>> {
 	let text = from_utf8(bytes)?; //Utf8Error
+	//Remove BOM on encounter:
+	let text = if text.starts_with("\u{feff}") { &text[3..] } else { &text };
 	Ok(parse_jecs_string(text)?)
 }
 

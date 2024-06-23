@@ -19,7 +19,7 @@ fn main() {
 	
 	for file in files {
 		println!("- {}", file.to_str().unwrap());
-		let tree = match parser::parse_succ_file(&file) {
+		let tree = match parser::parse_jecs_file(&file) {
 			Ok(tree) => tree,
 			Err(e) => {
 				if let Some(e) = e.downcast_ref::<std::io::Error>() {

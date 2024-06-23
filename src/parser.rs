@@ -8,17 +8,17 @@ use std::str::Chars;
 use crate::errors::JecsCorruptedDataError;
 use crate::types::JecsType;
 
-pub fn parse_succ_file(path: &Path) -> Result<JecsType, Box<dyn Error>> {
+pub fn parse_jecs_file(path: &Path) -> Result<JecsType, Box<dyn Error>> {
 	let bytes = fs::read(&path)?; //std::io::Error
 	parse_jecs_bytes(&bytes)
 }
 
 pub fn parse_jecs_bytes(bytes: &[u8]) -> Result<JecsType, Box<dyn Error>> {
 	let text = from_utf8(bytes)?; //Utf8Error
-	Ok(parse_succ_string(text)?)
+	Ok(parse_jecs_string(text)?)
 }
 
-pub fn parse_succ_string(text: &str) -> Result<JecsType, JecsCorruptedDataError> {
+pub fn parse_jecs_string(text: &str) -> Result<JecsType, JecsCorruptedDataError> {
 	let mut tree_parser = TreeParser::default();
 	
 	let mut line_iterator = text.lines()
@@ -47,7 +47,7 @@ pub fn parse_succ_string(text: &str) -> Result<JecsType, JecsCorruptedDataError>
 
 #[derive(Eq, PartialEq)]
 #[derive(Debug)]
-enum SuccTypeInner {
+enum JecsTypeInner {
 	Any,
 	Value,
 	Map,
@@ -67,11 +67,11 @@ impl LineMeta {
 		self.key.is_none()
 	}
 	
-	fn get_data_type(&self) -> SuccTypeInner {
+	fn get_data_type(&self) -> JecsTypeInner {
 		if self.is_list() {
-			SuccTypeInner::List
+			JecsTypeInner::List
 		} else {
-			SuccTypeInner::Map
+			JecsTypeInner::Map
 		}
 	}
 	
@@ -264,13 +264,13 @@ struct LineContext {
 	meta: LineMeta,
 	children: Vec<LineContext>,
 	expected_child_indentation: usize,
-	determined_type: SuccTypeInner,
+	determined_type: JecsTypeInner,
 }
 
 impl LineContext {
 	fn new(meta: LineMeta) -> Self {
 		Self {
-			determined_type: if meta.is_parent() { SuccTypeInner::Any } else { SuccTypeInner::Value },
+			determined_type: if meta.is_parent() { JecsTypeInner::Any } else { JecsTypeInner::Value },
 			meta,
 			children: Vec::new(),
 			expected_child_indentation: 0,
@@ -327,11 +327,11 @@ impl TreeParser {
 	fn handle_new_child_line(&mut self, current_line_meta: LineMeta) -> Result<(), JecsCorruptedDataError> {
 		let previous_line = self.stack.last_mut().unwrap(); //For borrowing reasons, this has to be queried here again.
 		//Parent node type MUST be Any (no value):
-		if previous_line.determined_type != SuccTypeInner::Any {
+		if previous_line.determined_type != JecsTypeInner::Any {
 			jecs_error!(current_line_meta.row, "Child entries can only be added to entries without value");
 		}
 		//Indentation and type of the parent entry, can only be inferred from the child entry. Apply now:
-		previous_line.determined_type = if current_line_meta.is_list() { SuccTypeInner::List } else { SuccTypeInner::Map };
+		previous_line.determined_type = if current_line_meta.is_list() { JecsTypeInner::List } else { JecsTypeInner::Map };
 		previous_line.expected_child_indentation = current_line_meta.indentation;
 		
 		self.stack.push(LineContext::new(current_line_meta));
@@ -378,7 +378,7 @@ impl TreeParser {
 				//First confirm, that the indentation is not above the next parent. As that would be impossible.
 				//We have less indentation for this line that the child of the parent, thus the indentation cannot be bigger than the parents child indentation.
 				if current_line_meta.indentation > potential_parent.expected_child_indentation {
-					jecs_error!(current_line_meta.row, "Wrongly indented SUCC entry! Expected indentation {} but got {}", potential_parent.expected_child_indentation, current_line_meta.indentation);
+					jecs_error!(current_line_meta.row, "Wrongly indented JECS entry! Expected indentation {} but got {}", potential_parent.expected_child_indentation, current_line_meta.indentation);
 				}
 				//Check if the indentation level is the same as the current parent. If that is the case, we found the correct new parent.
 				if current_line_meta.indentation == potential_parent.expected_child_indentation {
@@ -426,14 +426,14 @@ impl TreeParser {
 		while let Some(mut entry) = process_stack.pop() {
 			//First create a converted Jecs type without child components:
 			let converted_entry = match entry.determined_type {
-				SuccTypeInner::Any => JecsType::Any(),
-				SuccTypeInner::Value => {
+				JecsTypeInner::Any => JecsType::Any(),
+				JecsTypeInner::Value => {
 					JecsType::Value(entry.meta.value.take().unwrap())
 				},
-				SuccTypeInner::Map => {
+				JecsTypeInner::Map => {
 					JecsType::Map(HashMap::with_capacity(entry.children.len()))
 				}
-				SuccTypeInner::List => {
+				JecsTypeInner::List => {
 					JecsType::List(Vec::with_capacity(entry.children.len()))
 				}
 			};
